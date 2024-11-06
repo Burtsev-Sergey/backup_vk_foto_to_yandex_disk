@@ -4,6 +4,7 @@ import requests
 from pprint import pprint
 from datetime import datetime, timezone
 import json
+from tqdm import tqdm
 
 # Извлечение из глобальных переменных в операционную систему токенов ВК и Яндекс Диск
 dotenv_path = 'config_example.env'
@@ -38,8 +39,7 @@ class VKConnektor:
     }
     response = requests.get(url, params=params)
     return response.json()
-
-
+  
 # Класс - создание папки для хранения фотографий на Яндекс Диск
 class YDConnektor:
     def __init__(self, token):
@@ -65,12 +65,14 @@ def validate_photo_info(photo_info, user_id):
 
   return True
 
-# Функция выделяет из json-файла ответа от ВК 5 фотографий максимального размера в пикселях
+# Функция принимает json файл ответ от ВК с фотографиями профиля,
+# ищет фотографии максимального размера в пикселях и возвращает список из 5 таких фотографий 
 def get_largest_photos(photos_info, top_n=5):
   photos = photos_info.get('response', {}).get('items', [])
   largest_photos = []
 
-  for photo in photos:
+  # Используем tqdm для отображения прогресса цикла
+  for photo in tqdm(photos, desc='Processing photos', unit='photo'):
     max_size = max(photo['sizes'], key=lambda s: s['width'] * s['height'])
     largest_photos.append({
       'url': max_size['url'],
